@@ -1,8 +1,9 @@
+
 var retire = require('./retire'),
-    _      = require('underscore'),
     fs     = require('fs'),
     crypto = require('crypto'),
     path   = require('path'),
+    _      = require('underscore'),
     log    = require('./utils').log,
     emitter   = new require('events').EventEmitter;
 
@@ -17,6 +18,7 @@ var hash = {
 };
 
 function printResults(file, results, options) {
+  removeIgnored(results, options.ignore);
   if (!retire.isVulnerable(results) && !options.verbose) return;
   var logger = log(options).info;
   if (retire.isVulnerable(results)) {
@@ -58,13 +60,46 @@ function printVulnerability(component, options) {
   return string;
 }
 
-function shouldIgnore(file, ignores) {
-  return _.detect(ignores, function(i) { return file.indexOf(i) === 0 || file.indexOf(path.resolve(i)) === 0; });
+function shouldIgnorePath(fileSpecs, ignores) {
+  return _.detect(ignores.paths, function(i) {
+    return _.detect(fileSpecs, function(j) {
+      return j.indexOf(i) === 0 || j.indexOf(path.resolve(i)) === 0 ; 
+    });
+  });
+}
+
+function removeIgnored(results, ignores) {
+  if (!ignores.hasOwnProperty("descriptors")) return;
+  results.forEach(function(r) {
+    if (!r.hasOwnProperty("vulnerabilities")) return;
+    ignores.descriptors.forEach(function(i) {
+      if (r.component !== i.component) return;
+      if (i.version && r.version !== i.version) return;
+      if (i.identifiers) {
+        removeIgnoredVulnerabilitiesByIdentifier(i.identifiers, r);
+        return;
+      }
+      r.vulnerabilities = [];
+    });
+    if (r.vulnerabilities.length === 0) delete r.vulnerabilities;
+  });
+}
+
+function removeIgnoredVulnerabilitiesByIdentifier(identifiers, result) {
+  result.vulnerabilities = result.vulnerabilities.filter(function(v) {
+    if (!v.hasOwnProperty("identifiers")) return true;
+    return !_.every(identifiers, function(value, key) { return hasIdentifier(v, key, value); });
+  });
+}
+function hasIdentifier(vulnerability, key, value) {
+  if (!vulnerability.identifiers.hasOwnProperty(key)) return false;
+  var identifier = vulnerability.identifiers[key];
+  return Array.isArray(identifier) ? identifier.some(function(x) { return x === value; }) : identifier === value;
 }
 
 
 function scanJsFile(file, repo, options) {
-  if (options.ignore && shouldIgnore(file, options.ignore)) {
+  if (options.ignore && shouldIgnorePath([file], options.ignore)) {
     return;
   }
   var results = retire.scanFileName(file, repo);
@@ -81,7 +116,7 @@ function printParent(comp, options) {
 
 function scanDependencies(dependencies, nodeRepo, options) {
   for (var i in dependencies) {
-    if (options.ignore && shouldIgnore(dependencies[i].component, options.ignore)) {
+    if (options.ignore && shouldIgnorePath([dependencies[i].component, toModulePath(dependencies[i])], options.ignore)) {
       continue;
     }
     results = retire.scanNodeDependency(dependencies[i], nodeRepo);
@@ -98,9 +133,22 @@ function scanDependencies(dependencies, nodeRepo, options) {
   }
 }
 
+function toModulePath(dep) {
+  function f(d) {
+    if (d.parent) return f(d.parent) + "/node_modules/" + d.component;
+    return "";
+  }
+  return path.resolve(f(dep).substring(1));
+}
+
+
+
 function scanBowerFile(file, repo, options) {
+  if (options.ignore && shouldIgnorePath([file], options.ignore)) {
+    return;
+  }
   try {
-  var bower = JSON.parse(fs.readFileSync(file));
+    var bower = JSON.parse(fs.readFileSync(file));
     if (bower.version) {
       var results = retire.check(bower.name, bower.version, repo);
       printResults(file, results, options);

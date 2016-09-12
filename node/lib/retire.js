@@ -3,12 +3,20 @@
  * cannot have any external dependencies (no require)	
  */
 
-
 var exports = exports || {};
-exports.version = '1.1.1';
+exports.version = '1.2.10';
 
 function isDefined(o) {
 	return typeof o !== 'undefined';
+}
+
+function uniq(results){
+	var keys = {};
+	return results.filter(function(r) {
+		var k = r.component + ' ' + r.version;
+		keys[k] = keys[k] || 0;
+		return keys[k]++ === 0;
+	});
 }
 
 function scan(data, extractor, repo, matcher) {
@@ -19,10 +27,12 @@ function scan(data, extractor, repo, matcher) {
 		if (!isDefined(extractors)) continue;
 		for (var i in extractors) {
 			var match = matcher(extractors[i], data);
-			if (match) detected.push({ version: match, component: component, detection: extractor });
+			if (match) {
+				detected.push({ version: match, component: component, detection: extractor });
+			}
 		}
 	}
-	return detected;
+	return uniq(detected);
 }
 
 function simpleMatch(regex, data) {
@@ -32,11 +42,11 @@ function simpleMatch(regex, data) {
 }
 function replacementMatch(regex, data) {
 	var ar = /^\/(.*[^\\])\/([^\/]+)\/$/.exec(regex);
-	var re = new RegExp("(" + ar[1] + ")");
+	var re = new RegExp(ar[1]);
 	var match = re.exec(data);
 	var ver = null;
 	if (match) {
-		ver = match[1].replace(new RegExp(ar[1]), ar[2]);
+		ver = match[0].replace(new RegExp(ar[1]), ar[2]);
 		return ver;
 	}
 	return null;

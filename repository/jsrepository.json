@@ -35,18 +35,49 @@
 					"summary": "Selector interpreted as HTML"
 				},
 				"severity": "medium",
-				"info" : [ "http://bugs.jquery.com/ticket/11290" , "http://research.insecurelabs.org/jquery/test/" ]}
+				"info" : [ "http://bugs.jquery.com/ticket/11290" , "http://research.insecurelabs.org/jquery/test/" ]
+			},
+			{
+				"atOrAbove" : "1.4.0",
+				"below" : "1.12.0",
+				"identifiers": {
+					"issue" : "2432",
+					"summary": "3rd party CORS request may execute"
+				},
+				"severity": "medium",
+				"info" : [ "https://github.com/jquery/jquery/issues/2432", "http://blog.jquery.com/2016/01/08/jquery-2-2-and-1-12-released/" ]
+			},
+			{
+				"atOrAbove" : "1.12.3",
+				"below" : "3.0.0-beta1",
+				"identifiers": {
+					"issue" : "2432",
+					"summary": "3rd party CORS request may execute"
+				},
+				"severity": "medium",
+				"info" : [ "https://github.com/jquery/jquery/issues/2432", "http://blog.jquery.com/2016/01/08/jquery-2-2-and-1-12-released/" ]
+			}
+
+
 		],
 		"extractors" : {
-			"func"    		: [ "/[0-9.]+/.test(jQuery.fn.jquery) ? jQuery.fn.jquery : undefined" ],
+			"func"    		: [ 
+								"/[0-9.]+/.test(jQuery.fn.jquery) ? jQuery.fn.jquery : undefined", 
+								"require('jquery').fn.jquery" 
+			],
 			"uri"			: [ "/(§§version§§)/jquery(\\.min)?\\.js" ],
 			"filename"		: [ "jquery-(§§version§§)(\\.min)?\\.js" ],
 			"filecontent"	: [
 								"/\\*!? jQuery v(§§version§§)", "\\* jQuery JavaScript Library v(§§version§§)",
 								"\\* jQuery (§§version§§) - New Wave Javascript", "// \\$Id: jquery.js,v (§§version§§)",
-								"/\\*! jQuery v(§§version§§)", "[^a-z]f=\"(§§version§§)\",.*[^a-z]jquery:f,",
-								"[^a-z]jquery:[ ]?\"(§§version§§)\""
-								],
+								"/\\*! jQuery v(§§version§§)",
+                "[^a-z]f=\"(§§version§§)\",.*[^a-z]jquery:f,",
+                "[^a-z]m=\"(§§version§§)\",.*[^a-z]jquery:m,",
+                "[^a-z.]jquery:[ ]?\"(§§version§§)\""
+			],
+			"filecontentreplace" : [
+				"/var [a-z]=[a-z]\\.document,([a-z])=\"(§§version§§)\",([a-z])=.{130,160};\\3\\.fn=\\3\\.prototype=\\{jquery:\\1/$2/"
+			],
 			"hashes"		: {}
 		}
 	},
@@ -264,6 +295,40 @@
 			"hashes"		: {}
 		}
 	},
+
+	"tinyMCE" : {
+		"vulnerabilities" : [
+			{
+				"below" : "1.4.2",
+				"serverity" : "high",
+				"identifiers" : {
+					"summary" : "Static code injection vulnerability in inc/function.base.php", 
+					"CVE" : "CVE-2011-4825"
+				},
+				"info" : [ "http://www.cvedetails.com/cve/CVE-2011-4825/" ]
+			},
+			{
+				"below" : "4.2.4",
+				"serverity" : "medium",
+				"identifiers" : { "summary" : "xss issues with media plugin not properly filtering out some script attributes." },
+				"info" : [ "https://www.tinymce.com/docs/changelog/" ]
+
+			},
+			{
+				"below" : "4.2.0",
+				"serverity" : "medium",
+				"identifiers" : { "summary" : "FIXED so script elements gets removed by default to prevent possible XSS issues in default config implementations" },
+				"info" : [ "https://www.tinymce.com/docs/changelog/" ]
+
+			}
+		],
+		"extractors" : {
+			"filecontent"	       : [ "// (§§version§§) \\([0-9\\-]+\\)[\n\r]+.{0,1200}l=.tinymce/geom/Rect." ],
+			"filecontentreplace" : [ "/tinyMCEPreInit.*majorVersion:.([0-9]+).,minorVersion:.([0-9.]+)./$1.$2/" ],
+			"func" 				       : [ "tinyMCE.majorVersion + '.'+ tinyMCE.minorVersion" ]
+		}
+	},
+
 	"YUI" : {
 		"vulnerabilities" : [
 			{
@@ -281,6 +346,7 @@
 				"info" : [ "http://www.cvedetails.com/cve/CVE-2013-4941/" ]
 			},
 			{
+				"atOrAbove" : "3.0.0",
 				"below" : "3.10.3",
 				"severity": "high",
 				"identifiers": {"CVE": [ "CVE-2013-4940" ] },
@@ -297,7 +363,7 @@
 				"atOrAbove" : "2.8.0" ,
 				"below" : "2.9.1",
 				"severity": "high",
-				"identifiers": {"CVE": [ "CVE_2012-5883" ] },
+				"identifiers": {"CVE": [ "CVE-2012-5883" ] },
 				"info" : [ "http://www.cvedetails.com/cve/CVE-2012-5883/" ]
 			},
 			{
@@ -343,7 +409,7 @@
 			}
 		],
 		"extractors" : {
-			"func"    		: [ "YUI.Version" ],
+			"func"    		: [ "YUI.Version", "YAHOO.VERSION" ],
 			"filename"		: [ "yui-(§§version§§)(.min)?\\.js"],
 			"filecontent"	: [ "/*\nYUI (§§version§§)", "/yui/license.(?:html|txt)\nversion: (§§version§§)"],
 			"hashes"		: {}
@@ -374,6 +440,48 @@
 	},
 	"ember" : {
 		"vulnerabilities" : [
+			{ 
+				"atOrAbove" : "1.8.0",
+				"below" :"1.11.4",
+				"severity" : "medium",
+				"identifiers": {"CVE": "CVE-2015-7565"},
+				"info": [ "https://groups.google.com/forum/#!topic/ember-security/OfyQkoSuppY" ]
+			},
+			{ 
+				"atOrAbove" : "1.12.0",
+				"below" :"1.12.2",
+				"severity" : "medium",
+				"identifiers": {"CVE": "CVE-2015-7565"},
+				"info": [ "https://groups.google.com/forum/#!topic/ember-security/OfyQkoSuppY" ]
+			},
+			{ 
+				"atOrAbove" : "1.13.0",
+				"below" : "1.13.12",
+				"severity" : "medium",
+				"identifiers": {"CVE": "CVE-2015-7565"},
+				"info": [ "https://groups.google.com/forum/#!topic/ember-security/OfyQkoSuppY" ]
+			},
+			{ 
+				"atOrAbove" : "2.0.0",
+				"below" : "2.0.3",
+				"severity" : "medium",
+				"identifiers": {"CVE": "CVE-2015-7565"},
+				"info": [ "https://groups.google.com/forum/#!topic/ember-security/OfyQkoSuppY" ]
+			},
+			{ 
+				"atOrAbove" : "2.1.0",
+				"below" : "2.1.2",
+				"severity" : "medium",
+				"identifiers": {"CVE": "CVE-2015-7565" },
+				"info": [ "https://groups.google.com/forum/#!topic/ember-security/OfyQkoSuppY" ]
+			},
+			{ 
+				"atOrAbove" : "2.2.0",
+				"below" : "2.2.1",
+				"severity" : "medium",
+				"identifiers": {"CVE": "CVE-2015-7565"},
+				"info": [ "https://groups.google.com/forum/#!topic/ember-security/OfyQkoSuppY" ]
+			},
 			{
 				"below" : "1.5.0",
 				"severity": "medium",
@@ -601,6 +709,7 @@
 				"info" : [ "https://github.com/angular/angular.js/blob/b3b5015cb7919708ce179dc3d6f0d7d7f43ef621/CHANGELOG.md" ]
 			},
 			{
+				"atOrAbove" : "1.2.19",
 				"below" : "1.2.24",
 				"severity": "medium",
 				"identifiers": {
@@ -636,7 +745,44 @@
 					"summary": "server-side xss can bypass CSP"
 				},
 				"info" : [ "https://github.com/angular/angular.js/blob/master/CHANGELOG.md" ]
+			},
+			{
+				"below" : "1.5.0-rc.2",
+				"severity": "low",
+				"identifiers": {
+					"summary": "server-side xss can bypass CSP"
+				},
+				"info" : [ "https://github.com/angular/angular.js/blob/master/CHANGELOG.md" ]
+			},
+			{
+				"below" : "1.5.0-beta.2",
+				"severity": "low",
+				"identifiers": {
+					"summary": "UI Redress Attack Through Improper Sanitization of SVG Elements"
+				},
+				"info" : [ "https://srcclr.com/security/ui-redress-attack-through-improper/javascript/s-2252" ]			
+			},
+			{
+				"below" : "1.5.0-beta.2",
+				"severity": "medium",
+				"identifiers": {
+					"summary": "Arbitrary Code Execution Through SVG Animation Functionality"
+				},
+				"info" : [ "https://srcclr.com/security/arbitrary-code-execution-through-svg/javascript/s-2253" ]
+			},
+			{
+				"atOrAbove" : "1.3.3",
+				"below" : "2.0.0.0",
+				"severity": "medium",
+				"identifiers": {
+					"summary": "Arbitrary Code Execution Through access to constructors"
+				},
+				"info" : [ 
+					"https://github.com/angular/angular.js/issues/14939",
+					"https://srcclr.com/security/arbitrary-code-execution-via-constructor-access/javascript/sid-2589/summary" 
+				]
 			}
+
 
 		],
 		"extractors" : {
@@ -645,7 +791,7 @@
 			"filename"		: [ "angular(?:js)?-(§§version§§)(.min)?\\.js" ],
 			"filecontent"	: [ 
 				"/\\*[ \n]+AngularJS v(§§version§§)",
-				"http://errors.angularjs.org/(§§version§§)/"
+				"http://errors\\.angularjs\\.org/(§§version§§)/"
 			],
 			"hashes"		: {}
 		}
@@ -679,7 +825,18 @@
 					"bug": "112",
 					"summary": "execution of arbitrary javascript"
 				},
-				"info" : [ "https://github.com/janl/mustache.js/issues/112" ] } ],
+				"info" : [ "https://github.com/janl/mustache.js/issues/112" ] 
+			},
+			{
+				"below" : "2.2.1",
+				"severity": "medium",
+				"identifiers": {
+					"bug": "pull request 530",
+					"summary": "weakness in HTML escaping"
+				},
+				"info" : [ "https://github.com/janl/mustache.js/releases/tag/v2.2.1", "https://github.com/janl/mustache.js/pull/530" ] 
+			} 
+		],
 		"extractors" : {
 			"func"			: [ "Mustache.version" ],
 			"uri"			: [ "/(§§version§§)/mustache(\\.min)?\\.js" ],
@@ -736,7 +893,7 @@
 			}
 		],
 		"extractors" : {
-			"uri"			: [ "/(easyXDM-)?(§§version§§)/easyXDM(\\.min)?\\.js" ],
+			"uri"			: [ "/(?:easyXDM-)?(§§version§§)/easyXDM(\\.min)?\\.js" ],
 			"filename"		: [ "easyXDM-(§§version§§)(.min)?\\.js" ],
 			"filecontent"	: [ " \\* easyXDM\n \\* http://easyxdm.net/(?:\r|\n|.)+version:\"(§§version§§)\"",
 								"@class easyXDM(?:.|\r|\n)+@version (§§version§§)(\r|\n)" ],
@@ -763,8 +920,8 @@
 			"func"			: [ "plupload.VERSION" ],
 			"uri"			: [ "/(§§version§§)/plupload(\\.min)?\\.js" ],
 			"filename"		: [ "plupload-(§§version§§)(.min)?\\.js" ],
-			"filecontent"	: [ "\\* Plupload - multi-runtime File Uploader(\r|\n)+ \\* v§§version§§",
-								"var g=\\{VERSION:\"§§version§§\",.*;window.plupload=g\\}"
+			"filecontent"	: [ "\\* Plupload - multi-runtime File Uploader(?:\r|\n)+ \\* v(§§version§§)",
+								"var g=\\{VERSION:\"(§§version§§)\",.*;window.plupload=g\\}"
 								],
 			"hashes"		: {}
 		}
@@ -781,11 +938,62 @@
 		],
 		"extractors" : {
 			"func"			: [ "DOMPurify.version" ],
-			"filecontent"	: [ "DOMPurify.version = '§§version§§';" ],
+			"filecontent"	: [ 
+				"DOMPurify.version = '(§§version§§)';", 
+				"DOMPurify.version=\"(§§version§§)\""
+			],
 			"hashes"		: {}
 		}
 	},
 
+	"react" : {
+		"vulnerabilities" : [
+			{ 
+				"atOrAbove" : "0.4.0", "below" : "0.4.2",
+				"severity" : "low", 
+				"identifiers" : { "CVE": "CVE-2013-7035", "summary":"potential XSS vulnerability can arise when using user data as a key" },
+				"info": [ "https://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html" ]
+			},
+			{ 
+				"atOrAbove" : "0.5.0", "below" : "0.5.2",
+				"severity" : "low", 
+				"identifiers" : { "CVE": "CVE-2013-7035", "summary":"potential XSS vulnerability can arise when using user data as a key" },
+				"info": [ "https://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html" ]
+			},
+			{ 
+				"below" : "0.14.0",
+				"severity" : "low", 
+				"identifiers" : { "summary":" including untrusted objects as React children can result in an XSS security vulnerability" },
+				"info": [ "http://danlec.com/blog/xss-via-a-spoofed-react-element", "https://facebook.github.io/react/blog/2015/10/07/react-v0.14.html" ]
+			}
+		],
+		"extractors" : {
+			"func" : [ 
+				"react.version",
+				"require('react').version"
+			],
+			"filecontent" : [
+				"/\\*\\*\n +\\* React \\(with addons\\) ?v(§§version§§)",
+				"/\\*\\*\n +\\* React v(§§version§§)",
+				"\"\\./ReactReconciler\":[0-9]+,\"\\./Transaction\":[0-9]+,\"fbjs/lib/invariant\":[0-9]+\\}\\],[0-9]+:\\[function\\(require,module,exports\\)\\{\"use strict\";module\\.exports=\"(§§version§§)\"\\}"
+			]
+		}
+	},
+
+	"flowplayer" : {
+		"vulnerabilities" : [
+			{
+				"below" : "5.4.3",
+				"severity": "medium",
+				"identifiers": { "summary" : "XSS vulnerability in Flash fallback" },
+				"info" : [ "https://github.com/flowplayer/flowplayer/issues/381" ]
+			}
+		],
+		"extractors" : {
+			"uri"			    : [ "flowplayer-(§§version§§)(\\.min)?\\.js" ],
+			"filename"		: [ "flowplayer-(§§version§§)(\\.min)?\\.js" ]
+		}
+	},
 
 	"DWR" : {
 		"vulnerabilities" : [
@@ -812,8 +1020,23 @@
 		"extractors" : {
 			"func"			: [ "dwr.version" ],
 			"filecontent"	: [
-				" dwr-§§version§§.jar"
+				" dwr-(§§version§§).jar"
 			]
+		}
+	},
+
+	"moment.js" : {
+		"vulnerabilities" : [
+			{
+				"below" : "2.11.2",
+				"severity": "low",
+				"identifiers": { "summary":"reDOS - regular expression denial of service" },
+				"info" : [ "https://github.com/moment/moment/issues/2936" ]
+			}
+		],
+		"extractors" : {
+			"func"			: [ "moment.version" ],
+			"filecontent"	: [ "//! moment.js(?:[\n\r]+)//! version : (§§version§§)" ]
 		}
 	},
 
