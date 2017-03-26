@@ -4,7 +4,7 @@
  */
 
 var exports = exports || {};
-exports.version = '1.2.10';
+exports.version = '1.2.12';
 
 function isDefined(o) {
 	return typeof o !== 'undefined';
@@ -72,7 +72,7 @@ function check(results, repo) {
 		if (!isDefined(repo[result.component])) continue;
 		var vulns = repo[result.component].vulnerabilities;
 		for (var i in vulns) {
-			if (!isAtOrAbove(result.version, vulns[i].below)) {
+			if (!isDefined(vulns[i].below) || !isAtOrAbove(result.version, vulns[i].below)) {
 				if (isDefined(vulns[i].atOrAbove) && !isAtOrAbove(result.version, vulns[i].atOrAbove)) {
 					continue;
 				}
